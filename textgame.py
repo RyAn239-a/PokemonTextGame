@@ -14,7 +14,7 @@ def typewriter(message, delay=0.03, end='\n'):
 def typewriterInput(prompt, delay=0.03):
     while True:
         typewriter(prompt, delay, end='')
-        answer = input()
+        answer = input().upper()
         if answer == "E":
             inventoryWriter()
         else:
@@ -23,9 +23,10 @@ def typewriterInput(prompt, delay=0.03):
 # used to add in the lines to differentiate the inventory from gameplay
 def inventoryWriter():
     print()
+    print("Inventory:")
     typewriter("-----------------------------------------------")
     for line in inventory:
-        typewriter(f"{line["item"]}: {line["quantity"]}")
+        typewriter(f"{line["item"]} - {line["quantity"]}")
     typewriter("-----------------------------------------------")
     print()
 
@@ -53,6 +54,13 @@ desertPokemon = [
     {"name": "Sandshrew", "health": 50, "attack": 65, "defense": 30},
     {"name": "Eevee", "health": 45, "attack": 45, "defense": 45}
 ]
+
+bossPokemon = {
+    "name": "Gyarados",
+    "health": 95,
+    "attack": 125,
+    "defense": 79
+}
 
 # introduction 
 typewriter("Welcome to the Pokémon Adventure!")
@@ -96,13 +104,30 @@ else:
     wildPokemon = desertPokemon
 typewriter(f"Your starting location is the {location} region.")
 
+rounds = 0
 playerAlive = True
+visitedRegions = 1
 while playerAlive:
     # track leveling up for this round
     starterLevel = starter["level"]
 
     # get random chance for there to be a fork in the path
-    if random.randint(0,3) == 1:
+    if random.randint(0,3) == 1 and rounds != 0:
+        # if all three regions have been visited, then start BOSS battle. 
+        if vistedRegions == 3:
+            typewriter("The ground trembles. Your final trial has awakened.")
+            encounter = bossPokemon
+            # add boss pokemon code
+
+
+
+            while True:
+                action = typewriterInput("Would you like to fight(1), use potion(2), or switch pokemon(3): ")
+                while action not in ["1", "2", "3"]:
+                    action = typewriterInput("Would you like to fight(1), use potion(2), or switch pokemon(3): ")
+                action = int(action)
+                print()
+
         # user chooses but in actuality it is just random ahahahahahahahahahahahahahahaha
         fakeChoice = typewriterInput(f"You have encounteres a fork in the path. Will you go left or right: ").lower()
         while fakeChoice not in ["left", "right"]:
@@ -128,6 +153,7 @@ while playerAlive:
         location = newLocation
         typewriter("...............", delay=0.25)
         typewriter(f"You have made it to the {location} region!")
+        visitedRegions += 1
 
     # you encounter a wild pokemon
     encounter = wildPokemon[random.randint(0, 2)]
@@ -138,9 +164,9 @@ while playerAlive:
     encounterAlive = True
     while encounterAlive:
         # user chooses an option
-        action = typewriterInput("Would you like to fight(1), run away(2), or catch(3): ")
-        while action not in ["1", "2", "3"]:
-            action = typewriterInput("Would you like to fight(1), run away(2), or catch(3): ")
+        action = typewriterInput("Would you like to fight(1), run away(2), catch(3), use potion(4), or switch pokemon(5): ")
+        while action not in ["1", "2", "3", "4", "5"]:
+            action = typewriterInput("Would you like to fight(1), run away(2), catch(3), use potion(4), or switch pokemon(5): ")
         action = int(action)
         print()
 
@@ -165,6 +191,16 @@ while playerAlive:
                     starter["defense"] += 5 * levelup
                     typewriter(f"Your Pokémon has leveled up by {levelup}")
                     print()
+                
+                # at the end of every round, when you kill the encounter, you get random loot
+                loot = random.randint(1, 2)
+                if loot == 1:
+                 # get potion
+                    inventory[0]["quantity"] += 1   
+                    typewriter("You found a potion!")   
+                else:
+                    inventory[1]["quantity"] += 1    
+                    typewriter("You found a pokéball!") 
 
                 encounterAlive = False
                 break
@@ -179,23 +215,48 @@ while playerAlive:
                 typewriter("You successfully escaped battle.")
                 print()
                 encounterAlive = False
-                # at the end of every round, when you kill the encounter, you get random loot
-                loot = random.randint(1, 2)
-                if loot == 1:
-                 # get potion
-                    inventory[0]["quantity"] += 1   
-                    typewriter("You found a potion!")   
-                else:
-                    inventory[1]["quantity"] += 1    
-                    typewriter("You found a pokéball!") 
-                break
+                break 
             else:
                 typewriter("You failed to run away...")
                 print()
         
         # catch action
         elif action == 3:
+            # check for avaialable pokeballs 
+            if inventory[1]["quantity"] == 0:
+                typewriter("You have no pokéballs available for use")
+            else:
+                # chance that pokeball does not work
+                if random.randint(1,4) == 4:
+                    typewriter(f"You have used your pokéball... however, it was had no effect.")
+                else:
+                     # add pokemon to your lineup if you catch it
+                    typewriter(f"You have used your pokéball... and successfully caught {encounter["name"]}")
+                    lineup.append({"pokemon": encounter, "active": False})
+                    # reduce number of pokeballs by 1
+                    inventory[1]["quantity"] -= 1
+                    encounterAlive = False
+                    break
             continue
+            
+        # potion usage
+        elif action == 4:
+            if inventory[0]["quantity"] == 0:
+                typewriter("You have no potions available for use")
+            else:
+                starter["health"] += 10
+                typewriter(f"You have used a potion. You pokémon has {starter["health"]} health left")
+                # reduce number of pokeballs by 1 
+                inventory[0]["quantity"] -= 1
+            continue
+        
+        elif action == 5:
+            # add switching pokemon code
+
+
+
+            
+
         # wild pokemon attacks you
         damage = int(encounter["attack"]/starter["defense"] * (10) + random.randint(0, 5))
         typewriter(f"{encounter["name"]} dealt {damage} damage to your pokémon")
@@ -209,3 +270,4 @@ while playerAlive:
             print()
 
     print(f"***{starter["health"]}, {starter["attack"]}, {starter["defense"]}")
+    round += 1
